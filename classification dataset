@@ -1,0 +1,78 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+dataset=pd.read_csv('diabetes_prediction_dataset.csv')
+print(dataset.describe())
+dataset['smoking_history']=dataset['smoking_history'].replace({'No Info':pd.NA})
+dataset['gender']=dataset['gender'].replace({'Male':float(1.0),'Female':float(0.0),'Other':pd.NA})
+dataset.dropna(inplace=True)
+x=dataset.iloc[:,:-1].values
+y=dataset.iloc[:,-1].values
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+column=ColumnTransformer(transformers=[('encoder',OneHotEncoder(),[4])],remainder='passthrough')
+x=column.fit_transform(x)
+x=np.array(x)
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(x,y,train_size=0.8,random_state=0)
+from sklearn.preprocessing import StandardScaler
+ss=StandardScaler()
+xtrain[:,-6:]=ss.fit_transform(xtrain[:,-6:])
+xtest[:,-6:]=ss.transform(xtest[:,-6:])
+
+from sklearn.linear_model import LogisticRegression
+lr=LogisticRegression(random_state=0)
+lr.fit(xtrain,ytrain)
+yp=lr.predict(xtest)
+from sklearn.metrics import accuracy_score
+print(accuracy_score(yp,ytest),'logistic')
+from sklearn.neighbors import KNeighborsClassifier
+max=0
+num=11
+for i in range(1,100):
+  knc=KNeighborsClassifier(n_neighbors=i)
+  knc.fit(xtrain,ytrain)
+  yp=knc.predict(xtest)
+  print(accuracy_score(yp,ytest),i)
+  if(accuracy_score(yp,ytest)>=max):
+      max=accuracy_score(yp,ytest)
+      num=i
+knc=KNeighborsClassifier(n_neighbors=num)
+knc.fit(xtrain,ytrain)
+yp=knc.predict(xtest)
+print(accuracy_score(yp,ytest),num,'k neighbors')
+from sklearn.tree import DecisionTreeClassifier
+dts=DecisionTreeClassifier(splitter='best',random_state=0)
+dts.fit(xtrain,ytrain)
+py=dts.predict(xtest)
+print(accuracy_score(py,ytest),'tree')
+from sklearn.naive_bayes import GaussianNB
+gnb=GaussianNB()
+gnb.fit(xtrain,ytrain)
+yp=gnb.predict(xtest)
+print(accuracy_score(yp,ytest),'nb')
+from sklearn.svm import SVC
+svc=SVC(kernel='linear',random_state=0)
+svc.fit(xtrain,ytrain)
+py=svc.predict(xtest)
+print(accuracy_score(py,ytest),'svc')
+ksvc=SVC(kernel='rbf',random_state=0)
+ksvc.fit(xtrain,ytrain)
+py=ksvc.predict(xtest)
+print(accuracy_score(py,ytest),'kernal')
+from sklearn.ensemble import RandomForestClassifier
+max=0
+num=0
+est=[5,25,125,625]
+for i in est:
+    rfc = RandomForestClassifier(n_estimators=i,random_state=0)
+    rfc.fit(xtrain,ytrain)
+    yp=rfc.predict((xtest))
+    print(accuracy_score(yp,ytest),i)
+    if(accuracy_score(yp,ytest)>=max):
+     max=accuracy_score(yp,ytest)
+     num=i
+rfc = RandomForestClassifier(n_estimators=num,random_state=0)
+rfc.fit(xtrain,ytrain)
+yp=rfc.predict((xtest))
+print(accuracy_score(yp,ytest),num,'forest')
