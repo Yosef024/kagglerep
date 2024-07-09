@@ -1,0 +1,97 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+dataset=pd.read_csv('Student_performance_data _.csv')
+
+from sklearn.linear_model import LogisticRegression
+print(dataset.describe())
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+
+x1=dataset.iloc[:,1:-1].values
+
+column=ColumnTransformer(transformers=[('encoder',OneHotEncoder(),[3,4,8])],remainder='passthrough')
+x1=column.fit_transform(x1)
+#x1=np.array(x1)
+
+x2=dataset.iloc[:,-2:-1].values
+y=dataset.iloc[:,-1].values
+
+plt.plot(x2,y)
+plt.xlabel('gpa')
+plt.ylabel('class')
+
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(x1,y,train_size=0.8,random_state=0)
+
+from sklearn.metrics import accuracy_score
+lr=LogisticRegression()
+lr.fit(xtrain,ytrain)
+yp=lr.predict(xtest)
+print(accuracy_score(ytest,yp))
+
+xtrain,xtest,ytrain,ytest=train_test_split(x2,y,train_size=0.8,random_state=0)
+
+lr2=LogisticRegression()
+lr2.fit(xtrain,ytrain)
+yp=lr2.predict(xtest)
+
+print(accuracy_score(ytest,yp),'logistic')
+from sklearn.naive_bayes import GaussianNB
+nb=GaussianNB()
+nb.fit(xtrain,ytrain)
+ynb=nb.predict(xtest)
+print(accuracy_score(ytest,ynb),'naive bayes')
+
+from sklearn.neighbors import KNeighborsClassifier
+max=0
+acc=0
+for i in range(2,30):
+    kntest=KNeighborsClassifier(n_neighbors=i)
+    kntest.fit(xtrain,ytrain)
+    yp=kntest.predict(xtest)
+    ac=accuracy_score(ytest,yp)
+    if ac>acc:
+        max=i
+        acc=ac
+
+print(max,acc)
+kn=KNeighborsClassifier(n_neighbors=max)
+kn.fit(xtrain,ytrain)
+ykn=kn.predict(xtest)
+print(accuracy_score(ytest,ykn),'k neighbors')
+
+from sklearn.tree import DecisionTreeClassifier
+max=0
+acc=0
+for i in range(2,100):
+    dtctest=DecisionTreeClassifier(max_leaf_nodes=i,random_state=0)
+    dtctest.fit(xtrain,ytrain)
+    yp=dtctest.predict(xtest)
+    ac=accuracy_score(ytest,yp)
+    if ac>acc:
+        max=i
+        acc=ac
+    print(i,ac)
+print(max)
+dtc=DecisionTreeClassifier(max_leaf_nodes=max,random_state=0)
+dtc.fit(xtrain,ytrain)
+ydtc=dtc.predict(xtest)
+print(accuracy_score(ytest,ydtc),'decision tree')
+
+from sklearn.ensemble import RandomForestClassifier
+max=0
+acc=0
+for i in range(2,70):
+    rfctest = RandomForestClassifier(n_estimators=i,random_state=0)
+    rfctest.fit(xtrain, ytrain)
+    yp = rfctest.predict(xtest)
+    ac=accuracy_score(ytest,yp)
+    if ac>acc:
+        max=i
+        acc=ac
+    print(i,ac)
+rfc=RandomForestClassifier(n_estimators=max,random_state=0)
+rfc.fit(xtrain,ytrain)
+yrfc=rfc.predict(xtest)
+print(accuracy_score(ytest,yrfc),'random forest')
