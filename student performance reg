@@ -1,0 +1,40 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+dataset=pd.read_csv("Student_Performance.csv")
+x=dataset.iloc[:,:-1].values
+y=dataset.iloc[:,-1].values
+
+from sklearn.preprocessing import LabelEncoder
+le=LabelEncoder()
+x[:,2]=le.fit_transform(x[:,2])
+print(x[:,2])
+le2=LabelEncoder()
+dataset['Extracurricular Activities']=le2.fit_transform(dataset['Extracurricular Activities'])
+
+cor=dataset.corr()
+print(cor['Performance Index'].abs().sort_values())
+#dataset.drop(columns=['Sleep Hours','Sample Question Papers Practiced','Extracurricular Activities'],inplace=True)
+x=dataset.iloc[:,:-1].values
+print(x)
+
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(x,y,train_size=0.8,random_state=0)
+
+from sklearn.linear_model import LinearRegression
+lg=LinearRegression()
+lg.fit(xtrain,ytrain)
+yp=lg.predict(xtest)
+
+from sklearn.preprocessing import StandardScaler
+ss=StandardScaler()
+xtrain=ss.fit_transform(xtrain)
+xtest=ss.transform(xtest)
+
+lg.fit(xtrain,ytrain)
+yp2=lg.predict(xtest)
+
+from sklearn.metrics import r2_score
+print(r2_score(yp2,ytest))
+print(r2_score(yp,ytest))
+
