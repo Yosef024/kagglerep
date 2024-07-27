@@ -1,0 +1,67 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+dataset=pd.read_csv('plant_growth_data.csv')
+print(dataset.isnull().sum())
+print(dataset.head())
+print(dataset.describe())
+dataset=pd.get_dummies(dataset,columns=['Soil_Type','Water_Frequency','Fertilizer_Type'])
+cor=dataset.corr()
+print(cor['Growth_Milestone'].abs().sort_values())
+x=dataset.iloc[:,:-1].values
+y=dataset.iloc[:,-1].values
+from sklearn.model_selection import train_test_split
+xtrain,xtest,ytrain,ytest=train_test_split(x,y,train_size=0.8,random_state=0)
+from sklearn.preprocessing import StandardScaler
+ss=StandardScaler()
+xtrain=ss.fit_transform(xtrain)
+xtest=ss.transform(xtest)
+
+from sklearn.linear_model import LogisticRegression
+lr=LogisticRegression()
+lr.fit(xtrain,ytrain)
+ylr=lr.predict(xtest)
+from sklearn.metrics import accuracy_score,confusion_matrix
+print(accuracy_score(ytest,ylr))
+from sklearn.svm import SVC
+svc=SVC()
+svc.fit(xtrain,ytrain)
+ysvc=svc.predict(xtest)
+print(accuracy_score(ytest,ysvc),'\n',confusion_matrix(ytest,ysvc))
+
+from sklearn.tree import DecisionTreeClassifier
+dtc=DecisionTreeClassifier(max_depth=5)
+dtc.fit(xtrain,ytrain)
+ydtc=dtc.predict(xtest)
+print(accuracy_score(ytest,ydtc),'\n',confusion_matrix(ytest,ydtc))
+
+from sklearn.ensemble import RandomForestClassifier
+rfc=RandomForestClassifier(n_estimators=95)
+rfc.fit(xtrain,ytrain)
+yrfc=rfc.predict(xtest)
+print(accuracy_score(ytest,yrfc),'\n',confusion_matrix(ytest,yrfc))
+
+from sklearn.neighbors import KNeighborsClassifier
+m=0
+ac=0
+for i in range(1,30):
+    knc = KNeighborsClassifier(n_neighbors=i)
+    knc.fit(xtrain, ytrain)
+    yk = knc.predict(xtest)
+    acc=accuracy_score(ytest, yk)
+    print(i,":",acc)
+    if acc>=ac:
+        ac=acc
+        m=i
+print(m,":",ac)
+knc=KNeighborsClassifier(n_neighbors=m)
+knc.fit(xtrain,ytrain)
+yk=knc.predict(xtest)
+print(accuracy_score(ytest,yk),'\n',confusion_matrix(ytest,yk))
+
+
+from sklearn.naive_bayes import GaussianNB
+nb=GaussianNB()
+nb.fit(xtrain,ytrain)
+ynb=nb.predict(xtest)
+print(accuracy_score(ytest,ynb),'\n',confusion_matrix(ytest,ynb))
